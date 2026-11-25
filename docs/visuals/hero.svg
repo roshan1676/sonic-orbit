@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="620" viewBox="0 0 1440 620" role="img" aria-labelledby="title desc">
+<title id="title">SonicOrbit — Turn sound into space.</title><desc id="desc">A local spatial audio toolkit for headphones, with a singer and instrument sources positioned around a listener.</desc>
+<rect width="1440" height="620" rx="24" fill="#11180f"/><path d="M54 76H1386M54 546H1386" stroke="#35422e"/>
+<g font-family="Segoe UI,Arial,sans-serif"><text x="64" y="56" fill="#bdd6a6" font-size="15" letter-spacing="5">SONICORBIT</text><text x="1374" y="56" fill="#9ca991" font-size="13" text-anchor="end" letter-spacing="2">LOCAL AUDIO / ALPHA 01</text>
+<text x="64" y="210" fill="#eff2e8" font-size="76" font-weight="500" letter-spacing="-4">Turn sound</text><text x="64" y="296" fill="#c1dda6" font-size="76" font-weight="500" letter-spacing="-4">into space.</text>
+<text x="68" y="354" fill="#b5c0ac" font-size="22">Your media. Your headphones. Your listening room.</text>
+<text x="68" y="451" fill="#b7c7a7" font-size="14" letter-spacing="2">PLAYER  /  EXTENSION  /  ANDROID  /  WEB SDK</text>
+<text x="68" y="580" fill="#89977e" font-size="13">MIT licensed · Local processing · Original audio always available</text>
+<text x="1374" y="580" fill="#89977e" font-size="13" text-anchor="end">A spatial remix toolkit. Built to explore.</text></g>
+<g transform="translate(1090 316)"><circle r="186" fill="none" stroke="#35442d" stroke-width="2"/><circle r="119" fill="none" stroke="#35442d" stroke-dasharray="5 9"/><ellipse rx="250" ry="88" transform="rotate(-25)" fill="none" stroke="#617b4f" stroke-width="2"/><path d="M0-58 29 19 0 4-29 19Z" fill="#e9efdf"/><circle cx="0" cy="-186" r="11" fill="#e6d6b1"/><circle cx="-162" cy="-91" r="9" fill="#bdd8a4"/><circle cx="168" cy="-80" r="9" fill="#bdd8a4"/><circle cx="115" cy="147" r="7" fill="#839c6b"/>
+<g font-family="Segoe UI,Arial,sans-serif" font-size="13" letter-spacing="1"><text y="-215" text-anchor="middle" fill="#e6d6b1">VOICE / FRONT</text><text x="-185" y="-112" text-anchor="middle" fill="#b2c69f">INSTRUMENTS</text><text x="180" y="-101" text-anchor="middle" fill="#b2c69f">PERCUSSION</text><text y="58" text-anchor="middle" fill="#99ad88">YOU</text></g></g></svg>

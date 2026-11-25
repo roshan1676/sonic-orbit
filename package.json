@@ -1,0 +1,26 @@
+{
+  "name": "sonic-orbit",
+  "version": "0.1.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "description": "Local-first spatial audio for headphones: media player, tab extension, Android player and reusable Web Audio module.",
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/roshan1676/sonic-orbit.git" },
+  "scripts": {
+    "start": "node server.mjs",
+    "build:sdk": "node scripts/build-sdk.mjs",
+    "build:extension": "node scripts/build-extension.mjs",
+    "build:android": "node scripts/build-android.mjs",
+    "build:windows": "node scripts/build-windows.mjs",
+    "build:release": "node scripts/build-release.mjs",
+    "test": "node --test tests/dsp.test.mjs tests/motion.test.mjs tests/orientation.test.mjs tests/scene.test.mjs tests/sdk.test.mjs tests/extension.test.mjs tests/server.test.mjs",
+    "demo:tracker": "node scripts/send-tracker-demo.mjs",
+    "setup:tracking": "node scripts/setup-tracking.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "1.2.3"
+  }
+}

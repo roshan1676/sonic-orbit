@@ -1,0 +1,14 @@
+.cache/
+node_modules/
+*.log
+test-results/
+public/models/*.task
+.venv-audio/
+dist/
+__pycache__/
+*.pyc
+*.keystore
+*.jks
+.env
+.env.*
+!.env.example

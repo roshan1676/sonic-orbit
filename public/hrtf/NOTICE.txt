@@ -1,0 +1,5 @@
+SADIE II Database. Copyright 2018 University of York.
+Measured by Cal Armstrong, Lewis Thresh and Gavin Kearney, Audio Lab, University of York.
+Source: https://zenodo.org/records/12092466
+Reference: A Perceptual Evaluation of Individual and Non-Individual HRTFs: A Case Study of the SADIE II Database. DOI 10.3390/app8112029.
+This prototype selects a subset of 48 kHz 256-tap HRIRs and applies one shared level scalar per subject. Directional filter transitions are crossfaded. These are not measurements of the current user.

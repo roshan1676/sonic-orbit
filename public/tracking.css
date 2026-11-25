@@ -1,0 +1,18 @@
+.tracking-section{margin-top:22px;padding-top:20px;border-top:1px solid var(--border)}
+.tracking-heading{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.tracking-heading h3{font-size:12px;font-weight:500;margin:0}
+.tracking-heading output{color:var(--accent);font-size:11px;font-variant-numeric:tabular-nums}
+#camera-preview{width:100%;max-height:150px;object-fit:cover;transform:scaleX(-1);background:#070807;border-radius:5px;margin-top:12px}
+.tracking-actions{display:flex;align-items:center;gap:9px;margin-top:12px}
+.tracking-actions label{font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.tracking-actions input{accent-color:var(--accent)}
+.tracking-section p{font-size:10px;line-height:1.7;color:#b0b9a7;margin:10px 0 0}
+.tracking-section .tracking-note{color:var(--muted)}
+.listener{transition:none}
+.preset-field{margin-top:18px}.preset-field>label,.select-label{display:block;font-size:12px;margin-bottom:8px}.preset-field select,.tuning-details>select{width:100%}
+.preset-field p{font-size:10px;color:var(--muted);line-height:1.6;margin:8px 0 0}.tuning-details{font-size:11px;color:#b9c3ad;margin:14px 0 22px}.tuning-details>summary{padding:9px 0;margin-bottom:10px;color:var(--accent)}
+.tuning-details .slider-field{margin-top:16px}.tuning-details .select-label{margin-top:16px;font-size:11px}.check-label{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);margin-top:16px}.check-label input{accent-color:var(--accent)}
+.tracking-health{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:12px;font-size:10px;color:var(--accent);font-variant-numeric:tabular-nums}.tracking-health>span:last-child{color:var(--muted)}
+#calibration-progress{width:100%;height:7px;margin-top:12px;accent-color:var(--accent)}#head-angle{font-size:10px}.test-section .button+.button{margin-top:9px}
+.tracking-shortcut{display:block;color:var(--accent);font-size:11px;margin:-8px 0 20px;text-decoration:none}.tracking-shortcut:hover{text-decoration:underline}#head-tracking{scroll-margin-top:20px}
+.source-selection{margin:0 0 20px;padding-bottom:18px;border-bottom:1px solid var(--border)}.source-selection select{width:100%;font-size:11px}.source-selection p{font-size:10px;line-height:1.7;color:var(--muted);margin:9px 0}.source-selection details{font-size:11px;margin-top:12px;color:#b8c6aa}.source-selection .text-button{margin-top:10px}

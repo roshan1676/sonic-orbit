@@ -1,0 +1,10 @@
+import { cp, mkdir, copyFile } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import './build-sdk.mjs';
+const root=resolve(dirname(fileURLToPath(import.meta.url)),'..'),out=resolve(root,'dist/sonic-orbit-extension');
+await mkdir(out,{recursive:true});await cp(resolve(root,'extensions/chromium'),out,{recursive:true});await cp(resolve(root,'dist/sonic-orbit-web'),resolve(out,'audio'),{recursive:true});
+await copyFile(resolve(root,'docs/extension-and-android.md'),resolve(out,'README.md'));
+await cp(resolve(root,'public/brand'),resolve(out,'brand'),{recursive:true});
+await copyFile(resolve(root,'LICENSE'),resolve(out,'LICENSE'));
+console.log(`Built unpacked Chromium extension: ${out}\nLoad this folder with Load unpacked in your browser's extension manager. Not installed or store-published automatically.`);
