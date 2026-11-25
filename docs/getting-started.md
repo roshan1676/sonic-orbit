@@ -4,7 +4,7 @@
 
 ## Windows: extract, open, listen
 
-Download the Windows x64 portable ZIP from [Releases](https://github.com/roshan1676/sonic-orbit/releases/tag/v0.1.0-alpha.1). Extract **all** of it into a writable folder. Open `SonicOrbit.exe`. The bundled local server starts without a terminal and opens the interface in your browser. No separate Node installation or administrator rights are required.
+Download the Windows x64 portable ZIP from [Releases](https://github.com/roshan1676/sonic-orbit/releases/tag/v0.1.0-alpha.2). Extract **all** of it into a writable folder. Open `SonicOrbit.exe`. The bundled local server starts without a terminal and opens the interface in your browser. No separate Node installation or administrator rights are required.
 
 Keep all packaged folders beside the launcher; running inside the ZIP will not work. The launcher chooses an available local port between 3600 and 3699. Open it again to reopen its session. Closing the browser tab does not stop the server; run `Stop-SonicOrbit.cmd` to stop the instance belonging to that package. Only process/port state is remembered, not media history.
 

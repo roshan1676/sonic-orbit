@@ -20,7 +20,7 @@ await cp(join(root,'mobile','android','assets'),assets,{recursive:true});await c
 const unsigned=join(build,'unsigned.apk'),aligned=join(build,'aligned.apk'),out=join(root,'dist','sonic-orbit-android-debug.apk');
 const resources=join(build,'resources.zip');
 run(join(tools,'aapt2.exe'),['compile','--dir',join(root,'mobile','android','res'),'-o',resources]);
-run(join(tools,'aapt2.exe'),['link','-o',unsigned,'-I',platform,'--manifest',join(root,'mobile','android','AndroidManifest.xml'),'-A',assets,'--min-sdk-version','26','--target-sdk-version','35','--version-code','1','--version-name',version,resources]);
+run(join(tools,'aapt2.exe'),['link','-o',unsigned,'-I',platform,'--manifest',join(root,'mobile','android','AndroidManifest.xml'),'-A',assets,'--min-sdk-version','26','--target-sdk-version','35','--version-code','2','--version-name',version,resources]);
 run(javac,['-encoding','UTF-8','-source','8','-target','8','-bootclasspath',join(tools,'core-lambda-stubs.jar')+';'+platform,'-d',classes,join(root,'mobile','android','src','io','github','roshan1676','sonicorbit','MainActivity.java')]);
 async function classFiles(path){const entries=await readdir(path,{withFileTypes:true}),files=[];for(const entry of entries){const file=join(path,entry.name);if(entry.isDirectory())files.push(...await classFiles(file));else if(entry.name.endsWith('.class'))files.push(file);}return files;}
 run(java,['-cp',join(tools,'lib','d8.jar'),'com.android.tools.r8.D8','--lib',platform,'--min-api','26','--output',dex,...await classFiles(classes)]);

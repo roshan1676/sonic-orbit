@@ -20,7 +20,7 @@ test('local server protects paths and media access while serving seekable files'
   t.after(async () => { await new Promise(resolve => { server.close(resolve); server.closeAllConnections(); }); await rm(path); await rmdir(directory); });
   const base = `http://127.0.0.1:${server.address().port}`;
   const session = await (await fetch(base + '/api/session')).json();
-  assert.equal(session.app.name,'SonicOrbit');assert.equal(session.app.version,'0.1.0-alpha.1');assert.equal(typeof session.features.aiSeparation,'boolean');
+  assert.equal(session.app.name,'SonicOrbit');assert.equal(session.app.version,'0.1.0-alpha.2');assert.equal(typeof session.features.aiSeparation,'boolean');
   assert.equal(session.initial.path, undefined); assert.equal(session.initial.name, 'sample.mp4');
   const response = await fetch(base + session.initial.url, { headers: { Range: 'bytes=3-6' } });
   assert.equal(response.status, 206); assert.equal(await response.text(), '3456');

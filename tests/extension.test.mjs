@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ExtensionController } from '../extensions/chromium/controller.js';
 import { TabAudioSession } from '../extensions/chromium/tab-session.js';
-import { sanitize } from '../extensions/chromium/settings.js';
+import { sanitize, DEFAULTS, LISTENING_PROFILES } from '../extensions/chromium/settings.js';
 import { readFile } from 'node:fs/promises';
 
 function fakeApi({url='https://www.youtube.com/watch?v=example',fail=false}={}){
@@ -27,7 +27,7 @@ test('restricted pages and capture failures do not leave an offscreen processor 
 function fakeSession({fail=false,getUserMedia}={}){
   let stopped=0,closed=0,disposed=0,requested;const track=new EventTarget();track.stop=()=>{stopped++;};const stream={getTracks:()=>[track]};
   const context={state:'running',sampleRate:48000,createMediaStreamSource:()=>({connect(){},disconnect(){}}),resume:async()=>{},close:async()=>{context.state='closed';closed++;}};
-  const session=new TabAudioSession({getUserMedia:getUserMedia|| (async constraints=>{requested=constraints;return stream;}),createContext:()=>context,createSpatialAudio:async()=>{if(fail)throw new Error('Renderer unavailable');return {input:{},update(){},setSceneOptions(){},setHeadPose(){},dispose:async()=>{disposed++;}};}});
+  const session=new TabAudioSession({getUserMedia:getUserMedia|| (async constraints=>{requested=constraints;return stream;}),createContext:()=>context,createSpatialAudio:async()=>{if(fail)throw new Error('Renderer unavailable');return {input:{},update(){},setSceneOptions(){},setHeadPose(){},setHrtfProfile:async()=>{},dispose:async()=>{disposed++;}};}});
   return {session,stream,counts:()=>({stopped,closed,disposed}),requested:()=>requested};
 }
 test('tab audio session uses no microphone, routes audio and releases capture and context on stop',async()=>{
@@ -43,5 +43,20 @@ test('cancelling a pending tab capture stops a stream granted later',async()=>{
 test('extension declares minimal permissions and bounds all persisted audio settings',async()=>{
   const manifest=JSON.parse(await readFile(new URL('../extensions/chromium/manifest.json',import.meta.url),'utf8'));
   assert.deepEqual(manifest.permissions,['activeTab','tabCapture','offscreen','storage']);assert.equal(manifest.host_permissions,undefined);assert.equal(manifest.content_scripts,undefined);
-  const value=sanitize({bass:999,volume:-4,clarity:NaN,yaw:Infinity,unknown:'ignored'});assert.equal(value.bass,6);assert.equal(value.volume,0);assert.equal(value.clarity,1);assert.equal(value.yaw,0);assert.equal(value.unknown,undefined);
+  const value=sanitize({bass:999,volume:-4,clarity:NaN,yaw:Infinity,unknown:'ignored'});assert.equal(value.bass,6);assert.equal(value.volume,0);assert.equal(value.clarity,0);assert.equal(value.yaw,0);assert.equal(value.unknown,undefined);
+});
+
+
+test('extension upgrade resets the coloured default and keeps the listening volume cap',async()=>{
+  const fake=fakeApi(),state=await new ExtensionController(fake.api).handle({type:'STATUS'});
+  assert.equal(state.settings.profile,'studio');assert.equal(state.settings.space,100);
+  assert.equal(state.settings.theatre,0);assert.equal(state.settings.room,0);assert.equal(state.settings.bass,0);
+  assert.equal(state.settings.volume,50);assert.equal(state.settings.schema,2);
+  assert.equal(LISTENING_PROFILES.clean.space,0);assert.equal(DEFAULTS.clarity,0);
+});
+
+test('an unavailable measured profile releases tab capture instead of leaving a silent session',async()=>{
+  const fake=fakeSession();fake.session.createSpatialAudio=async()=>({input:{},update(){},setSceneOptions(){},setHeadPose(){},setHrtfProfile:async()=>{throw new Error('Missing profile');},dispose:async()=>{}});
+  await assert.rejects(fake.session.start({streamId:'token',tabId:7,settings:{hrtf:'H3'}}),/Missing profile/);
+  assert.equal(fake.session.status().running,false);assert.equal(fake.counts().stopped,1);assert.equal(fake.counts().closed,1);
 });

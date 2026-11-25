@@ -3,7 +3,11 @@ export class ExtensionController{
   constructor(api){this.api=api;this.queue=Promise.resolve();}
   handle(message){const work=this.queue.catch(()=>{}).then(()=>this.dispatch(message));this.queue=work;return work;}
   async exists(){return (await this.api.runtime.getContexts({contextTypes:['OFFSCREEN_DOCUMENT'],documentUrls:[this.api.runtime.getURL('offscreen.html')]})).length>0;}
-  async preferences(){const value=sanitize((await this.api.storage.local.get('settings')).settings);value.volume=Math.min(50,value.volume);return value;}
+  async preferences(){
+    const saved=(await this.api.storage.local.get('settings')).settings;
+    // Reset the old coloured default once when upgrading; preserve the volume cap.
+    const value=sanitize(saved?.schema===2?saved:{volume:saved?.volume});value.volume=Math.min(50,value.volume);return value;
+  }
   async forward(type,data={}){return this.api.runtime.sendMessage({target:'offscreen',type,...data});}
   async stop(){try{if(await this.exists()){try{await this.forward('STOP');}catch{}await this.api.offscreen.closeDocument();}}finally{await this.api.action.setBadgeText({text:''});}return {running:false};}
   async dispatch(message){

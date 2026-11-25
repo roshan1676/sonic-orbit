@@ -66,3 +66,25 @@ test('all four stems share the video offset and stop/restart across seek, buffer
     video.currentTime=120;player.sync();assert.equal(player.enabled,false);assert.equal(modes.at(-1),false);
   }finally{player.dispose();}
 });
+
+test('reopening the same file exposes the running job and can cancel it through the new media id',async()=>{
+  const root=await mkdtemp(join(tmpdir(),'sonic-job-alias-'));
+  try{
+    const path=join(root,'sample.mp4');await writeFile(path,'media');const jobs=new StemJobs(root);
+    const first={id:'first',path},second={id:'reopened',path},job=await jobs.status(first);let killed=0;
+    job.state='separating';jobs.running={job,child:{kill(){killed++;}}};
+    assert.equal(await jobs.status(second),job);jobs.cancel(second);
+    assert.equal(job.state,'cancelled');assert.equal(killed,1);
+  }finally{await rm(root,{recursive:true,force:true});}
+});
+
+test('cancelling during stem decoding does not start the next download or retain decoded buffers',async t=>{
+  const originalFetch=globalThis.fetch;t.after(()=>{globalThis.fetch=originalFetch;});
+  let decode,requests=0;
+  globalThis.fetch=async()=>{requests++;return {ok:true,arrayBuffer:async()=>new ArrayBuffer(8)};};
+  const video=new EventTarget(),engine={context:{currentTime:0,decodeAudioData:()=>new Promise(resolve=>{decode=resolve;})},createSceneSource:()=>({input:{},disconnect(){}}),setSceneEnabled(){}};
+  const player=new StemPlayer(video,engine,()=>{}),abort=new AbortController();
+  const loading=player.load({stems:['vocals','drums','bass','other'].map(name=>({name,url:name}))},()=>{},abort.signal);
+  await new Promise(resolve=>setImmediate(resolve));abort.abort();player.dispose();decode({duration:1});
+  await assert.rejects(loading,{name:'AbortError'});assert.equal(requests,1);assert.equal(player.buffers.size,0);
+});

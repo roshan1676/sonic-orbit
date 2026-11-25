@@ -1,14 +1,31 @@
 {
   "manifest_version": 3,
-  "name": "SonicOrbit · Tab Audio",
-  "version": "0.1.0",
-  "version_name": "0.1.0-alpha.1",
+  "name": "SonicOrbit \u00b7 Tab Audio",
+  "version": "0.1.1",
+  "version_name": "0.1.0-alpha.2",
   "homepage_url": "https://github.com/roshan1676/sonic-orbit",
-  "icons": { "16": "brand/icon-16.png", "48": "brand/icon-48.png", "128": "brand/icon-128.png" },
+  "icons": {
+    "16": "brand/icon-16.png",
+    "48": "brand/icon-48.png",
+    "128": "brand/icon-128.png"
+  },
   "description": "Local headphone spatialization and tone controls for a tab you choose. Experimental stereo processing.",
   "minimum_chrome_version": "116",
-  "permissions": ["activeTab", "tabCapture", "offscreen", "storage"],
-  "background": { "service_worker": "background.js", "type": "module" },
-  "action": { "default_popup": "popup.html", "default_title": "SonicOrbit" },
-  "content_security_policy": { "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; object-src 'none'" }
+  "permissions": [
+    "activeTab",
+    "tabCapture",
+    "offscreen",
+    "storage"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "SonicOrbit"
+  },
+  "content_security_policy": {
+    "extension_pages": "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; media-src 'self' blob:; object-src 'none'"
+  }
 }

@@ -13,6 +13,7 @@ export class StemJobs {
   async status(item) {
     if (this.jobs.has(item.id)) return this.jobs.get(item.id);
     const key = await stemKey(item.path), directory = join(this.root, '.cache', 'stems', key);
+    if(this.running?.job.directory===directory){this.jobs.set(item.id,this.running.job);return this.running.job;}
     let job = { state: 'idle', progress: 0, directory };
     try {
       const manifest = JSON.parse(await readFile(join(directory, 'manifest.json'), 'utf8'));
@@ -37,6 +38,7 @@ export class StemJobs {
     const child = spawn(python, [join(this.root, 'scripts', 'prepare-stems.py'), '--input', item.path, '--output', job.directory], { cwd: this.root, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
     this.running = { child, job }; let pending = '';
     child.stdout.on('data', chunk => {
+      if(job.state==='cancelled')return;
       pending += chunk.toString(); const lines = pending.split('\n'); pending = lines.pop();
       for (const line of lines) { try {
         const data = JSON.parse(line); if (data.state === 'ready') { job.state = 'saving'; job.progress = .99; }
@@ -49,7 +51,8 @@ export class StemJobs {
       if (this.running?.child === child) this.running = null;
       if (job.state === 'cancelled') return;
       if (code !== 0) { job.state = 'error'; job.error ||= 'Local separation failed. Check FFmpeg and the Python environment.'; return; }
-      this.jobs.delete(item.id); const ready = await this.status(item);
+      for(const [id,value] of this.jobs)if(value===job)this.jobs.delete(id);
+      const ready = await this.status(item);
       if (ready.state !== 'ready') { ready.state = 'error'; ready.error = 'Separation finished without a complete cache.'; }
     });
     return job;

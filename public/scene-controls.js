@@ -14,13 +14,13 @@ export class SceneControls {
       }
       $('scene-sources').append(row);
     }
-    $('prepare-stems').onclick=()=>this.prepare().catch(error=>{$('stem-status').textContent=error.message;$('prepare-stems').disabled=false;});
-    $('cancel-stems').onclick=async()=>{if(this.media?.id)await fetch(`/api/stems/${this.media.id}/cancel`,{method:'POST',headers:{'X-360-Token':this.getToken()}});};
+    $('prepare-stems').onclick=()=>this.prepare();
+    $('cancel-stems').onclick=()=>this.cancel();
     $('enable-scene').onchange=()=>{if($('enable-scene').checked)this.onEnable();this.player?.setEnabled($('enable-scene').checked);};
     $('turn-away').oninput=()=>{this.applyOptions();$('turn-away-value').textContent=$('turn-away').value+'%';};
     $('hrtf-profile').onchange=async()=>{
       const select=$('hrtf-profile');select.disabled=true;$('hrtf-status').textContent='Loading local headphone profile…';
-      try{await this.engine?.setHrtfProfile(select.value);$('hrtf-status').textContent=select.value==='browser'?'Browser HRTF active for AI objects.':'Measured SADIE II profile active for AI objects. Ear anatomy varies; compare comfort and front/back placement. Room reflections use browser HRTF.';}
+      try{this.engine=await this.ensureAudio({resume:false});await this.engine.setHrtfProfile(select.value);$('hrtf-status').textContent=select.value==='browser'?'Browser HRTF active for stereo and object sources.':'Measured SADIE II profile active for stereo and object sources. Ear anatomy varies; compare comfort and front/back placement. Room reflections use browser HRTF.';}
       catch(error){select.value='browser';await this.engine?.setHrtfProfile('browser');$('hrtf-status').textContent=error.message;}
       finally{select.disabled=false;}
     };
@@ -32,25 +32,50 @@ export class SceneControls {
     this.draw();
   }
   async reset(media) {
-    const generation=++this.generation;clearTimeout(this.poll);this.player?.dispose();this.player=null;this.media=media;
+    const generation=++this.generation;clearTimeout(this.poll);this.abort?.abort();this.player?.dispose();this.player=null;this.media=media;this.busy=false;
     $('enable-scene').checked=false;$('enable-scene').disabled=true;$('scene-controls').disabled=true;$('speed').disabled=false;
-    $('prepare-stems').disabled=!media?.id||this.capabilities?.aiSeparation===false;$('cancel-stems').hidden=true;$('stem-progress').hidden=true;
+    $('prepare-stems').disabled=!media?.id||this.capabilities?.aiSeparation===false;$('cancel-stems').hidden=false;$('cancel-stems').disabled=true;$('stem-progress').hidden=true;
     $('prepare-stems').textContent='Prepare local AI tracks';
     this.onState();
     $('stem-status').textContent=media?.id?'Separate vocals, drums, bass and other instruments on this PC. First 5 minutes; longer videos use stereo beyond that.':'Use Open by path for local AI separation. File-picker playback still supports the stereo spatializer.';
     if(!media?.id)return;
     if(this.capabilities?.aiSeparation===false){$('prepare-stems').textContent='AI setup required';$('stem-status').textContent='Optional AI separation needs the local Python environment and FFmpeg. See Help for setup. Ordinary spatial playback is ready.';}
-    try { const data=await(await fetch(`/api/stems/${media.id}`)).json();if(generation===this.generation&&data.state==='ready'){$('prepare-stems').disabled=false;$('prepare-stems').textContent='Load prepared AI tracks';$('stem-status').textContent='Four AI tracks are already prepared locally for this video. Load them to place the singer and instruments.';} } catch {}
+    try {
+      const data=await(await fetch(`/api/stems/${media.id}`)).json();if(generation!==this.generation)return;
+      if(data.state==='ready'){$('prepare-stems').disabled=false;$('prepare-stems').textContent='Load prepared AI tracks';$('stem-status').textContent='Four AI tracks are already prepared locally for this video. Load them to place the singer and instruments.';}
+      else if(!['idle','error','cancelled'].includes(data.state))this.prepare();
+    } catch {}
+  }
+  async cancel() {
+    if(!this.busy||!this.media?.id)return;
+    const media=this.media,generation=++this.generation;clearTimeout(this.poll);this.abort?.abort();this.player?.dispose();this.player=null;
+    $('enable-scene').checked=false;$('enable-scene').disabled=true;$('scene-controls').disabled=true;$('speed').disabled=false;this.onState();
+    $('cancel-stems').disabled=true;$('stem-status').textContent='Stopping local processing…';
+    try {
+      // Let a pending start reach the server before sending cancellation.
+      await this.startRequest?.catch(()=>{});
+      const response=await fetch(`/api/stems/${media.id}/cancel`,{method:'POST',headers:{'X-360-Token':this.getToken()},signal:AbortSignal.timeout(10000)});
+      if(!response.ok)throw new Error('Could not confirm cancellation. Retry Cancel processing.');
+      if(generation!==this.generation)return;
+      this.busy=false;$('stem-progress').hidden=true;$('prepare-stems').disabled=false;$('stem-status').textContent='Processing stopped. Prepared files, if complete, remain available locally.';
+    }catch(error){if(generation===this.generation){$('stem-status').textContent=error.message;$('cancel-stems').disabled=false;}}
   }
   async prepare() {
-    const media=this.media, generation=this.generation;if(!media?.id)return;
-    $('prepare-stems').disabled=true; const response=await fetch(`/api/stems/${media.id}`,{method:'POST',headers:{'X-360-Token':this.getToken()}}),data=await response.json();
+    const media=this.media;if(!media?.id||this.busy)return;
+    const generation=++this.generation;this.busy=true;this.abort=new AbortController();
+    const fail=error=>{if(generation!==this.generation)return;$('stem-status').textContent=error.message;
+      // Network failure does not prove the server job stopped. Keep Cancel usable.
+      $('cancel-stems').disabled=false;};
+    $('prepare-stems').disabled=true;$('cancel-stems').hidden=false;$('cancel-stems').disabled=false;$('stem-status').textContent='Starting local processing…';
+    try {
+    this.startRequest=fetch(`/api/stems/${media.id}`,{method:'POST',headers:{'X-360-Token':this.getToken()},signal:AbortSignal.timeout(15000)});
+    const response=await this.startRequest,data=await response.json();
     if(!response.ok)throw new Error(data.error); if(generation!==this.generation)return;
     const poll=async state=>{
       if(generation!==this.generation)return;
       $('stem-progress').hidden=false;$('stem-progress').value=state.progress||0;
       if(state.state==='ready'){
-        $('cancel-stems').hidden=true;
+        $('stem-status').textContent='Preparing audio playback…';
         const engine=await this.ensureAudio();if(generation!==this.generation)return;this.engine=engine;
         const player=new StemPlayer(document.getElementById('video'),engine,enabled=>{
           if(generation!==this.generation)return;$('enable-scene').checked=enabled;$('speed').disabled=enabled;
@@ -58,19 +83,20 @@ export class SceneControls {
           this.onState();
           $('stem-status').textContent=enabled?'AI object scene active · singer and instruments anchored to the screen. Press A for the original.':`AI tracks loaded · ${Math.round(player.duration)} seconds available. Enable the object scene to listen.`;
         });this.player=player;
-        try { await player.load(state,text=>{if(generation===this.generation)$('stem-status').textContent=text;}); }
+        try { await player.load(state,text=>{if(generation===this.generation)$('stem-status').textContent=text;},this.abort.signal); }
         catch(error){player.dispose();if(generation===this.generation)this.player=null;throw error;}
         if(generation!==this.generation){player.dispose();return;}
         $('stem-progress').hidden=true;$('enable-scene').disabled=false;$('scene-controls').disabled=false;$('prepare-stems').textContent='AI tracks loaded';
         for(const[name,object]of player.objects)object.update({azimuth:Number($(`scene-${name}-azimuth`).value),level:Number($(`scene-${name}-level`).value)});
         this.applyOptions();
         try{await engine.setHrtfProfile($('hrtf-profile').value);}catch(error){$('hrtf-profile').value='browser';await engine.setHrtfProfile('browser');$('hrtf-status').textContent=error.message;}
-        if(generation!==this.generation)return;this.onEnable();player.setEnabled(true);return;
+        if(generation!==this.generation)return;this.onEnable();player.setEnabled(true);this.busy=false;$('cancel-stems').disabled=true;return;
       }
-      if(['error','cancelled'].includes(state.state)){ $('cancel-stems').hidden=true;$('stem-progress').hidden=true;$('prepare-stems').disabled=false;throw new Error(state.error||'Local separation cancelled.'); }
-      $('cancel-stems').hidden=false;$('stem-status').textContent=`Local AI: ${state.state} · ${Math.round((state.progress||0)*100)}%. Your media stays on this PC.`;
-      this.poll=setTimeout(async()=>{try{const result=await fetch(`/api/stems/${media.id}`);if(!result.ok)throw new Error('Cannot read the local AI job.');await poll(await result.json());}catch(error){if(generation===this.generation){$('stem-status').textContent=error.message;$('prepare-stems').disabled=false;$('cancel-stems').hidden=true;}}},1000);
+      if(['error','cancelled'].includes(state.state)){this.busy=false;$('cancel-stems').disabled=true;$('stem-progress').hidden=true;$('prepare-stems').disabled=false;$('stem-status').textContent=state.error||'Local separation cancelled.';return;}
+      $('cancel-stems').disabled=false;$('stem-status').textContent=`Local AI: ${state.state} · ${Math.round((state.progress||0)*100)}%. Your media stays on this PC.`;
+      this.poll=setTimeout(async()=>{try{const result=await fetch(`/api/stems/${media.id}`,{signal:this.abort.signal});if(!result.ok)throw new Error('Cannot read the local AI job.');await poll(await result.json());}catch(error){fail(error);}},1000);
     };await poll(data);
+    } catch(error){fail(error);}
   }
   applyOptions() { this.engine?.setSceneOptions({turnAway:Number($('turn-away').value)/100,theatre:Number($('theatre-room').value)}); }
   setYaw(degrees) {this.yaw=degrees;this.draw();}

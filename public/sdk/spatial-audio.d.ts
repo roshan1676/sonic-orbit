@@ -1,4 +1,4 @@
-export const VERSION: '0.1.0-alpha.1';
+export const VERSION: '0.1.0-alpha.2';
 export type Vector3 = [number, number, number] | { x: number; y: number; z: number } | Float32Array | Float64Array;
 export interface Quaternion { x: number; y: number; z: number; w: number }
 export type HrtfProfile = 'browser' | 'H3' | 'H17';

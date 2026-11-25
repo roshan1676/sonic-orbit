@@ -4,9 +4,9 @@ import { createSpatialAudio } from './sdk/spatial-audio.js';
 
 const assert = (condition, text) => { if (!condition) throw new Error(text); };
 const rms = (samples, start = 5000) => Math.sqrt(samples.slice(start).reduce((sum, x) => sum + x * x, 0) / (samples.length - start));
-async function render(patch = {}, { frequency = 440, amplitude = 0.2, direction, yaw = 0, guard = false, antiPhase = false, stepped = false } = {}) {
+async function render(patch = {}, { frequency = 440, amplitude = 0.2, direction, yaw = 0, guard = false, antiPhase = false, stepped = false, profile = 'browser' } = {}) {
   const context = new OfflineAudioContext(2, 24000, 48000);
-  const engine = await createAudioEngine(context, { guard }); engine.update({ ...patch, volume: 100 }, true); engine.setHeadPose(yaw, 0, true);
+  const engine = await createAudioEngine(context, { guard }); await engine.setHrtfProfile(profile); engine.update({ ...patch, volume: 100 }, true); engine.setHeadPose(yaw, 0, true);
   const buffer = context.createBuffer(2, 24000, 48000);
   for (let c = 0; c < 2; c++) { const samples = buffer.getChannelData(c); for (let i = 0; i < samples.length; i++) samples[i] = Math.sin(2 * Math.PI * frequency * i / 48000) * amplitude * (antiPhase && c === 1 ? -1 : 1) * (stepped && i < 12000 ? 0.1 : 1); }
   const source = context.createBufferSource(); source.buffer = buffer;
@@ -169,6 +169,22 @@ document.getElementById('run').onclick = async () => {
     }],
     ['SDK custom-routing mode leaves the device output silent until the host connects it',async()=>{
       const result=await renderSdk({route:false});assert(rms(result.getChannelData(0))<1e-8&&rms(result.getChannelData(1))<1e-8,'SDK bypassed host routing.');
+    }],
+    ...['browser','H3','H17'].map(profile=>[`${profile}: ordinary stereo centre follows head turn without room effects`,async()=>{
+      const result=await render({mode:'enhanced',space:100,anchor:100,room:0},{frequency:1000,yaw:.9,profile});
+      assert(rms(result.getChannelData(0))>rms(result.getChannelData(1))*1.1,'Stereo centre lost its directional cue.');
+    }]),
+    ...['H3','H17'].map(profile=>[`${profile}: fully spatial stereo retains opposite-phase content`,async()=>{
+      const result=await render({mode:'enhanced',space:100,anchor:65,room:0},{frequency:1500,antiPhase:true,profile});
+      for(let c=0;c<2;c++)assert(rms(result.getChannelData(c))>.002,'Side information cancelled or became silent.');
+    }]),
+    ['Studio path does not create a synthetic delayed room tail',async()=>{
+      const context=new OfflineAudioContext(2,12000,48000),engine=await createAudioEngine(context,{guard:false});
+      engine.update({mode:'enhanced',space:100,room:0,anchor:65,volume:100},true);engine.setSceneOptions({theatre:0});
+      const buffer=context.createBuffer(2,12000,48000);buffer.getChannelData(0)[1000]=.2;buffer.getChannelData(1)[1000]=.2;
+      const source=context.createBufferSource();source.buffer=buffer;source.connect(engine.input);source.start();
+      const result=await context.startRendering();engine.disconnect();
+      for(let c=0;c<2;c++){const samples=result.getChannelData(c);assert(rms(samples.slice(7000),0)<1e-6,'Unrequested room tail.');}
     }],
     ['Local face model loads in a worker and handles no-face input without a camera', checkTrackingWorker]
   ];

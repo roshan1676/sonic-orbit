@@ -52,6 +52,18 @@ export async function createAudioEngine(context, { guard = true, onMeter = () =>
   const rearHigh = filter('highpass', 420), rearLow = filter('lowpass', 6500);
   const rearDelay = context.createDelay(0.05); rearDelay.delayTime.value = 0.012; nodeList.push(rearDelay);
   const rearL = panner(-1.4, 0.3, 1.8), rearR = panner(1.4, 0.3, 1.8), rearLevelL = gain(0.16), rearLevelR = gain(-0.16);
+  // Use the selected measured profile for ordinary stereo too, not just AI objects.
+  const mediaPanners = [[frontSignalL,frontL,frontLevelL],[frontSignalR,frontR,frontLevelR],[mid,centrePanner,centreLevel]].map(([signal,native,level])=>{
+    const nativeGate=gain(),measured=new MeasuredPanner(context);
+    signal.connect(native);native.connect(nativeGate);nativeGate.connect(level);
+    signal.connect(measured.input);measured.output.connect(level);
+    return {nativeGate,measured};
+  });
+  function refreshMedia(immediate=false){
+    const angle=(20+settings.width*.55)*Math.PI/180;
+    const positions=[[-Math.sin(angle)*2,0,-Math.cos(angle)*2],[Math.sin(angle)*2,0,-Math.cos(angle)*2],[0,0,-2]];
+    mediaPanners.forEach((path,i)=>path.measured.update(positions[i],headBasis,immediate));
+  }
 
   input.connect(dry); input.connect(mediaGate); mediaGate.connect(bass); sceneSum.connect(sceneGate); sceneGate.connect(bass);
   bass.connect(mud); mud.connect(presence); presence.connect(air); air.connect(rumble);
@@ -74,9 +86,8 @@ export async function createAudioEngine(context, { guard = true, onMeter = () =>
   clean.connect(flat); flat.connect(processed); clean.connect(splitter);
   splitter.connect(frontSignalL, 0); splitter.connect(frontSignalR, 1);
   mid.connect(subtractMid); subtractMid.connect(frontSignalL); subtractMid.connect(frontSignalR);
-  frontSignalL.connect(frontL); frontSignalR.connect(frontR);
-  mid.connect(centrePanner); centrePanner.connect(centreLevel); centreLevel.connect(spatial);
-  frontL.connect(frontLevelL); frontR.connect(frontLevelR); frontLevelL.connect(spatial); frontLevelR.connect(spatial);
+  centreLevel.connect(spatial);
+  frontLevelL.connect(spatial); frontLevelR.connect(spatial);
   splitter.connect(sideL, 0); splitter.connect(sideR, 1); sideL.connect(side); sideR.connect(side);
   side.connect(rearHigh); rearHigh.connect(rearLow); rearLow.connect(rearDelay);
   rearDelay.connect(rearL); rearDelay.connect(rearR); rearL.connect(rearLevelL); rearR.connect(rearLevelR);
@@ -116,6 +127,7 @@ export async function createAudioEngine(context, { guard = true, onMeter = () =>
     move(rearLevelL.gain, settings.room / 100 * 0.9, immediate); move(rearLevelR.gain, -settings.room / 100 * 0.9, immediate);
     const elevation = settings.height / 100 * 1.8;
     move(rearL.positionY, elevation, immediate); move(rearR.positionY, elevation, immediate);
+    refreshMedia(immediate);
     for (const object of sceneObjects) object.refresh(immediate);
     return { ...settings };
   }
@@ -123,6 +135,7 @@ export async function createAudioEngine(context, { guard = true, onMeter = () =>
   function setHeadOrientation(quaternion, immediate = false) {
     const basis = listenerBasis(quaternion); if (!basis) return false;
     headForward = basis.forward; headBasis=basis;
+    refreshMedia(immediate);
     for (const object of sceneObjects) object.refresh(immediate);
     const listener = context.listener;
     const poseMove = (param, value) => { if (immediate) move(param, value, true); else param.setTargetAtTime(value, context.currentTime, 0.008); };
@@ -134,6 +147,8 @@ export async function createAudioEngine(context, { guard = true, onMeter = () =>
     async setHrtfProfile(name) {
       const version=++profileVersion,data=await loadHrtf(context,name,assetBaseUrl);if(version!==profileVersion)return;
       hrtfData=data;for(const object of sceneObjects){object.setProfile(data);object.refresh();}
+      for(const path of mediaPanners){path.measured.setProfile(data);move(path.nativeGate.gain,data?0:1);}
+      refreshMedia(true);
     },
     setSceneEnabled(enabled) {
       sceneEnabled = !!enabled;
@@ -181,6 +196,6 @@ export async function createAudioEngine(context, { guard = true, onMeter = () =>
     setHeadPose(yaw = 0, pitch = 0, immediate = false, roll = 0) {
       return setHeadOrientation(eulerQuaternion(yaw, pitch, roll), immediate);
     },
-    disconnect() { profileVersion++;for(const object of sceneObjects)object.disconnect();for (const n of nodeList) { if (n.port) { n.port.onmessage = null; n.port.close(); } n.disconnect(); } }
+    disconnect() { profileVersion++;for(const path of mediaPanners)path.measured.disconnect();for(const object of sceneObjects)object.disconnect();for (const n of nodeList) { if (n.port) { n.port.onmessage = null; n.port.close(); } n.disconnect(); } }
   };
 }

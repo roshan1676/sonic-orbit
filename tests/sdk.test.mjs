@@ -18,6 +18,6 @@ test('source distance gain is bounded nearby, attenuates far away and supports d
   assert.equal(distanceAttenuation(100,2,0),1);assert.ok(distanceAttenuation(1e6)>0);
 });
 test('SDK imports without starting browser services and rejects invalid capacity before allocating audio',async()=>{
-  assert.equal(VERSION,'0.1.0-alpha.1');
+  assert.equal(VERSION,'0.1.0-alpha.2');
   for(const maxSources of [0,129,1.5,NaN])await assert.rejects(createSpatialAudio({maxSources}),/maxSources/);
 });

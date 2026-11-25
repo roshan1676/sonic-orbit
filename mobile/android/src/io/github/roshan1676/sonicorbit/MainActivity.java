@@ -1,6 +1,7 @@
 package io.github.roshan1676.sonicorbit;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.database.Cursor;
 import android.media.AudioAttributes;
@@ -15,6 +16,8 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.LinearLayout;
 import java.io.*;
 import java.util.*;
 import java.util.concurrent.*;
@@ -26,6 +29,8 @@ public class MainActivity extends Activity {
   private static final String HOST="sound360.local";
   private static final int PICK_MEDIA=360;
   private WebView web;
+  private Button openMedia;
+  private boolean choosing=false;
   private final ExecutorService io=Executors.newSingleThreadExecutor();
   private volatile MediaFile selected;
   private volatile boolean copying=false, destroyed=false;
@@ -37,9 +42,11 @@ public class MainActivity extends Activity {
   }
   @Override public void onCreate(Bundle state){
     super.onCreate(state);
-    web=new WebView(this);setContentView(web);
+    LinearLayout layout=new LinearLayout(this);layout.setOrientation(LinearLayout.VERTICAL);
+    openMedia=new Button(this);openMedia.setText("Open music or video");openMedia.setOnClickListener(view->chooseMedia());layout.addView(openMedia);
+    web=new WebView(this);layout.addView(web,new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT,0,1));setContentView(layout);
     web.setBackgroundColor(0xff11180f);
-    web.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
+    layout.setOnApplyWindowInsetsListener((view,insets)->{view.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());return insets;});
     audioManager=(AudioManager)getSystemService(AUDIO_SERVICE);
     focus=new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN).setAudioAttributes(new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build()).setOnAudioFocusChangeListener(change->{if(change<0)pausePlayback();}).build();
     web.getSettings().setJavaScriptEnabled(true);web.getSettings().setDomStorageEnabled(true);
@@ -56,17 +63,22 @@ public class MainActivity extends Activity {
   private boolean isLocal(Uri uri){return "https".equals(uri.getScheme())&&HOST.equals(uri.getHost());}
   private void js(String code){runOnUiThread(()->{if(!destroyed)web.evaluateJavascript(code,null);});}
   private void pausePlayback(){js("window.pauseSound360 && window.pauseSound360()");}
+  private void chooseMedia(){
+    if(copying||choosing||destroyed)return;
+    try{
+      Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("*/*");intent.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"audio/*","video/*"});
+      choosing=true;startActivityForResult(intent,PICK_MEDIA);
+    }catch(ActivityNotFoundException|SecurityException error){choosing=false;android.widget.Toast.makeText(this,"Cannot open the system file picker. Enable a Files/Documents app and try again.",android.widget.Toast.LENGTH_LONG).show();}
+  }
   public final class LocalBridge {
-    @JavascriptInterface public void chooseMedia(){runOnUiThread(()->{
-      if(copying)return;
-      Intent intent=new Intent(Intent.ACTION_OPEN_DOCUMENT);intent.addCategory(Intent.CATEGORY_OPENABLE);intent.setType("*/*");intent.putExtra(Intent.EXTRA_MIME_TYPES,new String[]{"audio/*","video/*"});startActivityForResult(intent,PICK_MEDIA);
-    });}
+    @JavascriptInterface public void chooseMedia(){runOnUiThread(()->MainActivity.this.chooseMedia());}
     @JavascriptInterface public void audioFocus(){runOnUiThread(()->audioManager.requestAudioFocus(focus));}
   }
   @Override protected void onActivityResult(int request,int result,Intent data){
     super.onActivityResult(request,result,data);
+    if(request==PICK_MEDIA)choosing=false;
     if(request!=PICK_MEDIA||result!=RESULT_OK||data==null||data.getData()==null)return;
-    final Uri uri=data.getData();copying=true;js("window.mobileMediaLoading()");
+    final Uri uri=data.getData();copying=true;openMedia.setEnabled(false);js("window.mobileMediaLoading && window.mobileMediaLoading()");
     io.execute(()->{
       File file=null;
       try{
@@ -84,7 +96,7 @@ public class MainActivity extends Activity {
         MediaFile previous=selected;selected=new MediaFile(file,key,name,mime);if(previous!=null)previous.file.delete();
         JSONObject item=new JSONObject();item.put("name",name);item.put("url","https://"+HOST+"/media/"+key);item.put("bytes",file.length());js("window.mobileMediaReady("+item.toString()+")");
       }catch(Exception error){if(file!=null)file.delete();js("window.mobileMediaError("+JSONObject.quote(error.getMessage()==null?"Cannot open this file.":error.getMessage())+")");}
-      finally{copying=false;}
+      finally{copying=false;runOnUiThread(()->{if(!destroyed)openMedia.setEnabled(true);});}
     });
   }
   private WebResourceResponse serve(WebResourceRequest request){

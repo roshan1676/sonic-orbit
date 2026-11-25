@@ -48,7 +48,7 @@ function update(patch, custom = false) {
   engine?.update(settings); reflectSettings(); persist();
 }
 
-async function ensureAudio() {
+async function ensureAudio({ resume = true } = {}) {
   if (!audioPromise) {
     audioPromise = (async () => {
       context = new AudioContext({ latencyHint: 'interactive' });
@@ -69,7 +69,7 @@ async function ensureAudio() {
     });
   }
   await audioPromise;
-  if (context.state !== 'running') await context.resume();
+  if (resume && context.state !== 'running') await context.resume();
   return engine;
 }
 

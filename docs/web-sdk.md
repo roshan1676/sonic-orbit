@@ -1,4 +1,4 @@
-# SonicOrbit Web module · 0.1.0-alpha.1
+# SonicOrbit Web module · 0.1.0-alpha.2
 
 This is a working browser ES module used by the local video player. It has no UI framework dependency, starts no camera, and performs no AI inference or model downloads in the audio render path. It is not a native Unity or Unreal plugin.
 
@@ -72,7 +72,7 @@ await spatial.dispose();
 
 An optional `assetBaseUrl` changes where the worklet and `hrtf/` files load; by default they resolve relative to the module's parent folder, so subpath deployments work. Preserve module-relative imports when copying. `dispose` is idempotent and disconnects owned graph nodes and supplied source-to-module edges. It closes a context only if the factory created it. Stop and dispose the host's own source nodes separately. Released source handles reject further position/level updates.
 
-The underlying audio-engine compatibility methods are retained for the existing player; the documented module API above is the intended embedding surface. Version 0.1.0-alpha.1 is an experimental API, not a stable ABI.
+The underlying audio-engine compatibility methods are retained for the existing player; the documented module API above is the intended embedding surface. Version 0.1.0-alpha.2 is an experimental API, not a stable ABI.
 
 ## Highest-value next improvements
 
@@ -82,3 +82,5 @@ The underlying audio-engine compatibility methods are retained for the existing 
 4. A native renderer with source/listener transforms, geometry-based occlusion/reflections and Unity/Unreal adapters. Steam Audio is a candidate backend; see the architecture references. Engine integration should receive original game sources, positions and room geometry instead of separating the final game mix.
 
 None of these future items is implemented by packaging the browser module. Existing generic/measured HRTFs are not personal ear calibration, and no claim of superiority over Dolby Atmos follows from the prototype tests.
+
+In alpha 2, `setHrtfProfile()` also affects the ordinary stereo front speakers and centre anchor. Optional rear ambience and wall reflections still use the browser HRTF. No source coordinates are inferred from stereo.

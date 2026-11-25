@@ -7,12 +7,15 @@ export class StemPlayer {
     this.handlers = { playing: () => this.start(), pause: () => this.stop(), seeking: () => this.stop(), seeked: () => this.start(), waiting: () => this.stop(), ended: () => this.stop() };
     for (const [event, fn] of Object.entries(this.handlers)) video.addEventListener(event, fn);
   }
-  async load(data, onProgress = () => {}) {
+  async load(data, onProgress = () => {}, signal) {
     const loaded = new Map();
     for (const stem of data.stems) {
       onProgress(`Loading ${stem.name}…`);
-      const response = await fetch(stem.url); if (!response.ok) throw new Error(`Cannot load ${stem.name}.`);
-      loaded.set(stem.name, await this.engine.context.decodeAudioData(await response.arrayBuffer()));
+      signal?.throwIfAborted();
+      const response = await fetch(stem.url, { signal }); if (!response.ok) throw new Error(`Cannot load ${stem.name}.`);
+      const buffer = await this.engine.context.decodeAudioData(await response.arrayBuffer());
+      signal?.throwIfAborted(); if(this.disposed)return;
+      loaded.set(stem.name, buffer);
     }
     if (loaded.size !== 4) throw new Error('All four separated tracks are required.');
     if(this.disposed)return;
