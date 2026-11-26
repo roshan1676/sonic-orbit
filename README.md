@@ -1,7 +1,7 @@
 <p align="center"><img src="docs/visuals/hero.svg" alt="SonicOrbit — Turn sound into space." width="100%"></p>
 
 <p align="center">
-<a href="https://github.com/roshan1676/sonic-orbit/releases/tag/v0.1.0-alpha.2"><img src="https://img.shields.io/badge/release-0.1.0--alpha.2-bfd8a5?style=flat-square&amp;labelColor=172211" alt="Alpha release"></a>
+<a href="https://github.com/roshan1676/sonic-orbit/releases/tag/v0.2.0-alpha.1"><img src="https://img.shields.io/badge/release-0.2.0--alpha.1-bfd8a5?style=flat-square&amp;labelColor=172211" alt="Alpha release"></a>
 <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-bfd8a5?style=flat-square&amp;labelColor=172211" alt="MIT license"></a>
 <a href="docs/releases/v0.1.0-alpha.2.md"><img src="https://img.shields.io/badge/local_tests-40_passing-bfd8a5?style=flat-square&amp;labelColor=172211" alt="40 local automated tests passing"></a>
 </p>
@@ -10,25 +10,28 @@
 
 SonicOrbit includes a desktop media player, a Chromium tab-audio extension, an Android local-file player, and a reusable Web Audio module. This release is an **alpha**: the desktop audio graph and module have automated/browser checks; real extension capture and Android playback still need device testing. It is not an Atmos decoder or a universal system-wide audio driver.
 
-**New in alpha 2:** dry Studio/Clean/Cinema extension profiles, measured HRTFs for stereo, a headphone direction check, persistent AI cancellation, and Android file-picker hardening. [What changed and what still needs testing](docs/releases/v0.1.0-alpha.2.md).
+**New: SonicOrbit Native for Windows.** A native player and full offline installer with bundled playback libraries, C++ renderer and MIT-licensed Spleeter AI model. No browser, Python or first-use model download. [Native guide](docs/native-windows.md) · [Native release notes](docs/releases/v0.2.0-alpha.1.md). The browser/extension/Android prototypes remain at alpha 2.
 
 ## Download
 
-All downloads come from this repository's [v0.1.0-alpha.2 release](https://github.com/roshan1676/sonic-orbit/releases/tag/v0.1.0-alpha.2).
+The new Windows app is in [v0.2.0-alpha.1](https://github.com/roshan1676/sonic-orbit/releases/tag/v0.2.0-alpha.1). Browser/Android downloads remain in the earlier [v0.1.0-alpha.2 release](https://github.com/roshan1676/sonic-orbit/releases/tag/v0.1.0-alpha.2).
 
 | Your route | Download | Start here |
 | --- | --- | --- |
-| **Windows x64** | [Portable player](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SonicOrbit-0.1.0-alpha.2-windows-x64.zip) | Extract the whole folder, then open **SonicOrbit.exe**. Node is included |
+| **Windows x64 · Native** | [Offline installer](https://github.com/roshan1676/sonic-orbit/releases/download/v0.2.0-alpha.1/SonicOrbit-0.2.0-alpha.1-windows-x64-setup.exe) · [Portable ZIP](https://github.com/roshan1676/sonic-orbit/releases/download/v0.2.0-alpha.1/SonicOrbit-0.2.0-alpha.1-windows-x64-portable.zip) | Install once; playback, profiles and AI graph are included. [Guide](docs/native-windows.md) |
+| **Windows · browser lab** | [Portable player](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SonicOrbit-0.1.0-alpha.2-windows-x64.zip) | Extract the whole folder, then open **SonicOrbit.exe**. Node is included |
 | **Android 8+** | [Development APK](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SonicOrbit-0.1.0-alpha.2-android.apk) | Install through Android's package installer, then choose a local song/video |
 | **Chrome / Edge / Brave** | [Tab extension](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SonicOrbit-0.1.0-alpha.2-browser-extension.zip) | Extract, use **Load unpacked** in the extensions manager, then enable for a media tab |
 | **Developers** | [Web module](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SonicOrbit-0.1.0-alpha.2-web-sdk.zip) | Import `sdk/spatial-audio.js`. [API guide](docs/web-sdk.md) |
 | **Read offline** | [Illustrated documentation](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SonicOrbit-0.1.0-alpha.2-documentation.zip) | Setup, architecture, limitations and module examples |
 
-[Getting started](docs/getting-started.md) · [Platform compatibility](docs/extension-and-android.md) · [Release notes](docs/releases/v0.1.0-alpha.2.md) · [SHA-256 checksums](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SHA256SUMS.txt)
+[Native guide](docs/native-windows.md) · [Browser/Android guide](docs/getting-started.md) · [Platform compatibility](docs/extension-and-android.md) · [Native checksums](https://github.com/roshan1676/sonic-orbit/releases/download/v0.2.0-alpha.1/SHA256SUMS.txt) · [Browser/Android checksums](https://github.com/roshan1676/sonic-orbit/releases/download/v0.1.0-alpha.2/SHA256SUMS.txt)
 
-The Windows launcher is unsigned and the APK is development-signed. Verify the source/checksum and use your device's normal installation protections.
+The Windows native installer and older launcher are unsigned; the Android APK is development-signed. Verify the source/checksum and use your device's normal installation protections.
 
-## One core. Four ways to listen.
+## Native app and browser prototypes
+
+The native Windows build has its own C++ core and [experimental C API](docs/native-core.md). It is separate from the browser Web Audio module below. Camera tracking remains in the browser lab; native OpenTrack support currently consumes yaw only. See the [native feature and test details](docs/native-windows.md).
 
 <img src="docs/visuals/platforms.svg" alt="Windows player, browser tab processing, Android local files, and a reusable developer module" width="100%">
 

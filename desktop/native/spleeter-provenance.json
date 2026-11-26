@@ -1,0 +1,25 @@
+{
+  "model": "spleeter-4stems",
+  "source": "https://github.com/deezer/spleeter/releases/download/v1.4.0/4stems.tar.gz",
+  "sourceSha256": "3adb4a50ad4eb18c7c4d65fcf4cf2367a07d48408a5eb7d03cd20067429dfaa8",
+  "sha256": "0aa2486f1f375266f857e8aa44d42c33aee97f6014b44c9ffcac5e0d54c7b1b0",
+  "license": "MIT",
+  "sampleRate": 44100,
+  "frameLength": 4096,
+  "hop": 1024,
+  "timeFrames": 64,
+  "bins": 1024,
+  "stems": [
+    "vocals",
+    "drums",
+    "bass",
+    "other"
+  ],
+  "parityMaxAbsoluteError": {
+    "vocals": 5.774199962615967e-08,
+    "drums": 2.5704503059387207e-07,
+    "bass": 2.1979212760925293e-07,
+    "other": 3.166496753692627e-07
+  },
+  "conversion": "TensorFlow 2.12.1 / tf2onnx 1.16.1 / opset 17; float32 magnitude graph"
+}

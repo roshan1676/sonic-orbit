@@ -1,0 +1,29 @@
+SonicOrbit Native 0.2.0-alpha.1
+Original application and DSP code: MIT, copyright 2026 Roshan and SonicOrbit contributors.
+
+This distribution includes separate upstream components, not all covered by our MIT license:
+
+- LibVLC 3.0.24 / VideoLAN.LibVLC.Windows 3.0.24, LGPL-2.1-or-later as declared by its NuGet publisher, VideoLAN. Native codec plugins retain upstream licenses.
+  Source and build: https://code.videolan.org/videolan/vlc/-/tree/3.0.24
+  Binary package/build project: https://code.videolan.org/videolan/libvlc-nuget
+- LibVLCSharp and LibVLCSharp.WPF 3.10.2, LGPL-2.1-or-later, VideoLAN.
+  Source: https://code.videolan.org/videolan/LibVLCSharp
+- NAudio 2.2.1, MIT, Mark Heath and contributors. https://github.com/naudio/NAudio/tree/v2.2.1
+- Microsoft ONNX Runtime 1.23.2, MIT, Microsoft Corporation; see licenses/onnxruntime/.
+  https://github.com/microsoft/onnxruntime/tree/v1.23.2
+- Microsoft .NET 10.0.15 runtime, MIT and bundled third-party notices, .NET Foundation and contributors.
+  https://github.com/dotnet/runtime and https://github.com/dotnet/wpf
+- Microsoft Visual C++ x64 runtime 14.50.35710, Microsoft Software License Terms (not MIT).
+  App-local distributable DLLs are copied from the installed Visual Studio Redist directory.
+  https://learn.microsoft.com/en-us/cpp/windows/redistributing-visual-cpp-files
+- Spleeter 4-stem pretrained weights, MIT, copyright 2019-present Deezer SA.
+  Original artifact: https://github.com/deezer/spleeter/releases/download/v1.4.0/4stems.tar.gz
+  Converted by SonicOrbit from TensorFlow to a float32 ONNX magnitude graph with 64 time frames.
+  License: assets/models/LICENSE-SPLEETER.txt. Provenance, checksums and conversion error: assets/models/manifest.json.
+  Authors' explicit model license: https://raw.githubusercontent.com/deezer/spleeter/master/paper.md
+- SADIE II H3/H17 derived HRIR data, Apache-2.0, copyright 2018 University of York.
+  License and modifications/attribution: assets/hrtf/LICENSE.txt and NOTICE.txt.
+  https://zenodo.org/records/12092466
+
+Upstream dynamic libraries remain replaceable files; this build does not statically link them into a single opaque executable.
+The native renderer's complete source is also included in source/native, and application/build source is at https://github.com/roshan1676/sonic-orbit.
